@@ -1,5 +1,64 @@
 import argparse
 import sys
+import csv
+from datetime import datetime
+
+def convert_datetime(date_str):
+    """
+    Converts a Jira datetime string to a Google Spreadsheet compatible format.
+    
+    Args:
+        date_str (str): The date string to convert (e.g., '05/Nov/25 5:16 PM').
+        
+    Returns:
+        str: The converted date string in 'YYYY-MM-DD HH:mm:ss' format,
+             or 'ERROR' if parsing fails.
+    """
+    try:
+        # Parse the date string
+        dt = datetime.strptime(date_str, "%d/%b/%y %I:%M %p")
+        # Format to ISO-like format
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return "ERROR"
+
+def process_csv(input_file, output_file, column_names, log_file=None):
+    """
+    Reads the input CSV, processes it, and writes to the output CSV.
+    
+    Args:
+        input_file (str): Path to the source CSV file.
+        output_file (str): Path to the output CSV file.
+        column_names (str): Comma-separated list of columns to convert.
+        log_file (str, optional): Path to the log file.
+    """
+    target_columns = [col.strip() for col in column_names.split(',')]
+    
+    try:
+        with open(input_file, mode='r', newline='', encoding='utf-8') as infile:
+            reader = csv.DictReader(infile)
+            fieldnames = reader.fieldnames
+            
+            if not fieldnames:
+                print("Error: Input CSV file is empty or has no header.", file=sys.stderr)
+                return
+
+            with open(output_file, mode='w', newline='', encoding='utf-8') as outfile:
+                writer = csv.DictWriter(outfile, fieldnames=fieldnames)
+                writer.writeheader()
+                
+                for row in reader:
+                    # Passthrough for now (UC-3), transformation comes in UC-4
+                    writer.writerow(row)
+                    
+        print(f"Successfully processed '{input_file}' to '{output_file}'.")
+
+    except FileNotFoundError:
+        print(f"Error: Input file '{input_file}' not found.", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"An error occurred during processing: {e}", file=sys.stderr)
+        sys.exit(1)
 
 def parse_arguments():
     """
@@ -41,12 +100,7 @@ def main():
     """
     try:
         args = parse_arguments()
-        print("Arguments parsed successfully:")
-        print(f"  Input File: {args.input_file}")
-        print(f"  Column Names: {args.column_names}")
-        print(f"  Output File: {args.output_file}")
-        if args.log_file:
-            print(f"  Log File: {args.log_file}")
+        process_csv(args.input_file, args.output_file, args.column_names, args.log_file)
         
     except Exception as e:
         print(f"An error occurred: {e}", file=sys.stderr)
