@@ -43,6 +43,14 @@ def process_csv(input_file, output_file, column_names, log_file=None):
                 print("Error: Input CSV file is empty or has no header.", file=sys.stderr)
                 return
 
+            # Open log file if provided
+            log_handle = None
+            if log_file:
+                try:
+                    log_handle = open(log_file, 'w', encoding='utf-8')
+                except Exception as e:
+                    print(f"Warning: Could not open log file '{log_file}': {e}", file=sys.stderr)
+
             with open(output_file, mode='w', newline='', encoding='utf-8') as outfile:
                 writer = csv.DictWriter(outfile, fieldnames=fieldnames)
                 writer.writeheader()
@@ -50,11 +58,24 @@ def process_csv(input_file, output_file, column_names, log_file=None):
                 for row in reader:
                     for col in target_columns:
                         if col in row:
+                            original_value = row[col]
+                            new_value = original_value
                             try:
-                                row[col] = convert_datetime(row[col])
+                                new_value = convert_datetime(original_value)
+                                row[col] = new_value
                             except Exception:
                                 row[col] = "ERROR"
+                                new_value = "ERROR"
+                            
+                            if log_handle:
+                                status = "successful" if new_value != "ERROR" else "failed"
+                                log_msg = f"File:{input_file} Column:{col} original:{original_value} converted:{new_value} --> {status}\n"
+                                log_handle.write(log_msg)
+
                     writer.writerow(row)
+            
+            if log_handle:
+                log_handle.close()
                     
         print(f"Successfully processed '{input_file}' to '{output_file}'.")
 
