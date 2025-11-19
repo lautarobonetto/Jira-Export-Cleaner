@@ -103,6 +103,7 @@ def parse_arguments():
     parser.add_argument(
         "-c", "--column_names",
         required=True,
+        nargs='+',
         help="Comma-separated list of column names to convert (e.g., 'created,updated')."
     )
 
@@ -126,7 +127,8 @@ def main():
     """
     try:
         args = parse_arguments()
-        process_csv(args.input_file, args.output_file, args.column_names, args.log_file)
+        column_names = " ".join(args.column_names)
+        process_csv(args.input_file, args.output_file, column_names, args.log_file)
         
     except Exception as e:
         print(f"An error occurred: {e}", file=sys.stderr)
