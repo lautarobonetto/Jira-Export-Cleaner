@@ -48,7 +48,9 @@ def process_csv(input_file, output_file, column_names, log_file=None):
                 writer.writeheader()
                 
                 for row in reader:
-                    # Passthrough for now (UC-3), transformation comes in UC-4
+                    for col in target_columns:
+                        if col in row:
+                            row[col] = convert_datetime(row[col])
                     writer.writerow(row)
                     
         print(f"Successfully processed '{input_file}' to '{output_file}'.")
