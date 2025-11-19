@@ -50,7 +50,10 @@ def process_csv(input_file, output_file, column_names, log_file=None):
                 for row in reader:
                     for col in target_columns:
                         if col in row:
-                            row[col] = convert_datetime(row[col])
+                            try:
+                                row[col] = convert_datetime(row[col])
+                            except Exception:
+                                row[col] = "ERROR"
                     writer.writerow(row)
                     
         print(f"Successfully processed '{input_file}' to '{output_file}'.")
