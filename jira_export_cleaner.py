@@ -1,4 +1,5 @@
 import argparse
+import logging
 import sys
 import csv
 from datetime import datetime
@@ -22,7 +23,7 @@ def convert_datetime(date_str):
     except ValueError:
         return "ERROR"
 
-def process_csv(input_file, output_file, column_names, log_file=None):
+def process_csv(input_file, output_file, column_names):
     """
     Reads the input CSV, processes it, and writes to the output CSV.
     
@@ -30,7 +31,6 @@ def process_csv(input_file, output_file, column_names, log_file=None):
         input_file (str): Path to the source CSV file.
         output_file (str): Path to the output CSV file.
         column_names (str): Comma-separated list of columns to convert.
-        log_file (str, optional): Path to the log file.
     """
     target_columns = [col.strip() for col in column_names.split(',')]
     
@@ -40,16 +40,8 @@ def process_csv(input_file, output_file, column_names, log_file=None):
             fieldnames = reader.fieldnames
             
             if not fieldnames:
-                print("Error: Input CSV file is empty or has no header.", file=sys.stderr)
+                logging.error("Input CSV file is empty or has no header.")
                 return
-
-            # Open log file if provided
-            log_handle = None
-            if log_file:
-                try:
-                    log_handle = open(log_file, 'w', encoding='utf-8')
-                except Exception as e:
-                    print(f"Warning: Could not open log file '{log_file}': {e}", file=sys.stderr)
 
             with open(output_file, mode='w', newline='', encoding='utf-8') as outfile:
                 writer = csv.DictWriter(outfile, fieldnames=fieldnames)
@@ -67,23 +59,19 @@ def process_csv(input_file, output_file, column_names, log_file=None):
                                 row[col] = "ERROR"
                                 new_value = "ERROR"
                             
-                            if log_handle:
-                                status = "successful" if new_value != "ERROR" else "failed"
-                                log_msg = f"File:{input_file} Column:{col} original:{original_value} converted:{new_value} --> {status}\n"
-                                log_handle.write(log_msg)
+                            status = "successful" if new_value != "ERROR" else "failed"
+                            log_msg = f"File:{input_file} Column:{col} original:{original_value} converted:{new_value} --> {status}"
+                            logging.debug(log_msg)
 
                     writer.writerow(row)
             
-            if log_handle:
-                log_handle.close()
-                    
-        print(f"Successfully processed '{input_file}' to '{output_file}'.")
+        logging.info(f"Successfully processed '{input_file}' to '{output_file}'.")
 
     except FileNotFoundError:
-        print(f"Error: Input file '{input_file}' not found.", file=sys.stderr)
+        logging.error(f"Input file '{input_file}' not found.")
         sys.exit(1)
     except Exception as e:
-        print(f"An error occurred during processing: {e}", file=sys.stderr)
+        logging.error(f"An error occurred during processing: {e}")
         sys.exit(1)
 
 def parse_arguments():
@@ -127,11 +115,32 @@ def main():
     """
     try:
         args = parse_arguments()
+        
+        # Configure logging
+        # Configure logging
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)
+
+        # Console Handler
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setLevel(logging.INFO)
+        console_formatter = logging.Formatter('%(levelname)s: %(message)s')
+        console_handler.setFormatter(console_formatter)
+        logger.addHandler(console_handler)
+        
+        # File Handler
+        if args.log_file:
+            file_handler = logging.FileHandler(args.log_file, mode='w', encoding='utf-8')
+            file_handler.setLevel(logging.DEBUG)
+            file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+            file_handler.setFormatter(file_formatter)
+            logger.addHandler(file_handler)
+
         column_names = " ".join(args.column_names)
-        process_csv(args.input_file, args.output_file, column_names, args.log_file)
+        process_csv(args.input_file, args.output_file, column_names)
         
     except Exception as e:
-        print(f"An error occurred: {e}", file=sys.stderr)
+        logging.error(f"An error occurred: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
