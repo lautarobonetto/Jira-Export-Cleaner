@@ -4,12 +4,13 @@ import sys
 import csv
 from datetime import datetime
 
-def convert_datetime(date_str):
+def convert_datetime(date_str, date_format="%d/%b/%y %I:%M %p"):
     """
     Converts a Jira datetime string to a Google Spreadsheet compatible format.
     
     Args:
         date_str (str): The date string to convert (e.g., '05/Nov/25 5:16 PM').
+        date_format (str): The format of the input date string.
         
     Returns:
         str: The converted date string in 'YYYY-MM-DD HH:mm:ss' format,
@@ -17,13 +18,13 @@ def convert_datetime(date_str):
     """
     try:
         # Parse the date string
-        dt = datetime.strptime(date_str, "%d/%b/%y %I:%M %p")
+        dt = datetime.strptime(date_str, date_format)
         # Format to ISO-like format
         return dt.strftime("%Y-%m-%d %H:%M:%S")
     except ValueError:
         return "ERROR"
 
-def process_csv(input_file, output_file, column_names):
+def process_csv(input_file, output_file, column_names, date_format):
     """
     Reads the input CSV, processes it, and writes to the output CSV.
     
@@ -31,6 +32,7 @@ def process_csv(input_file, output_file, column_names):
         input_file (str): Path to the source CSV file.
         output_file (str): Path to the output CSV file.
         column_names (str): Comma-separated list of columns to convert.
+        date_format (str): The format of the input date string.
     """
     target_columns = [col.strip() for col in column_names.split(',')]
     
@@ -53,7 +55,7 @@ def process_csv(input_file, output_file, column_names):
                             original_value = row[col]
                             new_value = original_value
                             try:
-                                new_value = convert_datetime(original_value)
+                                new_value = convert_datetime(original_value, date_format)
                                 row[col] = new_value
                             except Exception:
                                 row[col] = "ERROR"
@@ -107,6 +109,13 @@ def parse_arguments():
         help="Path to a log file for recording conversion details."
     )
 
+    parser.add_argument(
+        "-f", "--date_format",
+        required=False,
+        default="%d/%b/%y %I:%M %p",
+        help="Format of the date strings in the input CSV (default: '%%d/%%b/%%y %%I:%%M %%p')."
+    )
+
     return parser.parse_args()
 
 def main():
@@ -137,7 +146,7 @@ def main():
             logger.addHandler(file_handler)
 
         column_names = " ".join(args.column_names)
-        process_csv(args.input_file, args.output_file, column_names)
+        process_csv(args.input_file, args.output_file, column_names, args.date_format)
         
     except Exception as e:
         logging.error(f"An error occurred: {e}")
