@@ -17,9 +17,10 @@
 /Users/lautarobonetto/projects/Jira-Export-Cleaner/
 ├── jira_export_cleaner.py    # Main executable script
 ├── README.md                  # User-facing documentation
-├── requirements.md            # Detailed functional requirements
-├── use-cases.md              # Implementation roadmap (UC-1 through UC-6)
-├── architecture.md           # Design philosophy and component breakdown
+├── docs/
+│   ├── requirements.md            # Detailed functional requirements
+│   ├── use-cases.md               # Implementation roadmap (UC-1 through UC-6)
+│   └── architecture.md            # Design philosophy and component breakdown
 ├── AGENTS.md                 # This file - AI assistant guide
 └── .gitignore                # Git ignore configuration
 ```
@@ -41,14 +42,14 @@ User-facing documentation with:
 - Input/output format specifications
 - Example commands including custom date format usage
 
-#### `requirements.md`
+#### `docs/requirements.md`
 Formal requirements document covering:
 - CLI specifications
 - Data processing requirements
 - Error handling requirements
 - Logging requirements
 
-#### `use-cases.md`
+#### `docs/use-cases.md`
 Development roadmap broken into 6 use cases:
 - UC-1: CLI Initialization & Argument Parsing ✅ Completed
 - UC-2: Core Date Conversion Logic ✅ Completed
@@ -57,7 +58,7 @@ Development roadmap broken into 6 use cases:
 - UC-5: Error Handling & Resilience ✅ Completed
 - UC-6: Logging ✅ Completed
 
-#### `architecture.md`
+#### `docs/architecture.md`
 Technical design document explaining:
 - Modular functional design philosophy
 - Technology stack (Python 3.x standard library)
